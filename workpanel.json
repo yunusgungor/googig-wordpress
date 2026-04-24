@@ -1,0 +1,110 @@
+{
+  "apiVersion": "workpanel/v2",
+  "kind": "Application",
+  "metadata": {
+    "name": "workpanel-wordpress",
+    "description": "Kişisel WordPress Blogu"
+  },
+  "spec": {
+    "env": {
+      "TZ": "Europe/Istanbul"
+    },
+    "volumes": [
+      {
+        "name": "wp-uploads",
+        "mountPath": "/var/www/html/wp-content/uploads",
+        "reclaimPolicy": "retain",
+        "backup": {
+          "enabled": true,
+          "retentionCount": 7
+        }
+      },
+      {
+        "name": "wp-plugins",
+        "mountPath": "/var/www/html/wp-content/plugins",
+        "reclaimPolicy": "retain"
+      },
+      {
+        "name": "wp-themes",
+        "mountPath": "/var/www/html/wp-content/themes",
+        "reclaimPolicy": "retain"
+      },
+      {
+        "name": "db-data",
+        "mountPath": "/var/lib/mysql",
+        "reclaimPolicy": "retain",
+        "backup": {
+          "enabled": true,
+          "retentionCount": 14
+        }
+      },
+      {
+        "name": "redis-data",
+        "mountPath": "/data",
+        "reclaimPolicy": "delete"
+      }
+    ],
+    "domains": [
+      {
+        "host": "blog.googig.cloud",
+        "service": "wordpress-app"
+      }
+    ],
+    "services": [
+      {
+        "name": "wordpress-app",
+        "type": "web",
+        "mode": "build",
+        "build": {
+          "context": ".",
+          "dockerfile": "Dockerfile"
+        },
+        "ports": [
+          {
+            "target": 80
+          }
+        ],
+        "volumes": [
+          "wp-uploads",
+          "wp-plugins",
+          "wp-themes"
+        ],
+        "env": {
+          "WORDPRESS_DB_HOST": "wordpress-db",
+          "WORDPRESS_DB_USER": "wp_user",
+          "WORDPRESS_DB_PASSWORD": "cokgizlisifre123",
+          "WORDPRESS_DB_NAME": "wp_database",
+          "WORDPRESS_CONFIG_EXTRA": "define('WP_REDIS_HOST', 'wordpress-redis'); define('WP_REDIS_PORT', '6379'); define('WP_CACHE', true);"
+        },
+        "dependsOn": [
+          "wordpress-db",
+          "wordpress-redis"
+        ]
+      },
+      {
+        "name": "wordpress-db",
+        "type": "worker",
+        "mode": "image",
+        "image": "mysql:8.0",
+        "volumes": [
+          "db-data"
+        ],
+        "env": {
+          "MYSQL_ROOT_PASSWORD": "root_cokgizlisifre",
+          "MYSQL_DATABASE": "wp_database",
+          "MYSQL_USER": "wp_user",
+          "MYSQL_PASSWORD": "cokgizlisifre123"
+        }
+      },
+      {
+        "name": "wordpress-redis",
+        "type": "redis",
+        "mode": "image",
+        "image": "redis:7-alpine",
+        "volumes": [
+          "redis-data"
+        ]
+      }
+    ]
+  }
+}

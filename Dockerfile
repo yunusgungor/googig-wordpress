@@ -23,7 +23,7 @@ COPY . /var/www/html/
 RUN chown -R www-data:www-data /var/www/html
 
 # Redis Object Cache eklentisini indirip hazır konuma getiriyoruz ve anında aktifleştiriyoruz
-RUN curl -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
+RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
     unzip redis-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm redis-cache.latest-stable.zip && \
     cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php && \

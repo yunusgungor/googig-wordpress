@@ -1,3 +1,6 @@
 Dockerfile
 workpanel.json
 .dockerignore
+.git
+.github
+*.log

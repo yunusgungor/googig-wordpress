@@ -12,16 +12,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# PHP eklentilerini kuruyoruz ve yapılandırıyoruz
+# PHP eklentilerini kuruyoruz (Ağır eklentileri ayırarak kaynak tüketimini dengeliyoruz)
+# Hafif eklentileri paralel kurabiliriz
+RUN docker-php-ext-install mysqli bcmath exif opcache
+
+# GD eklentisi yapılandırma gerektirir
 RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
-    docker-php-ext-install -j$(nproc) \
-    mysqli \
-    gd \
-    zip \
-    intl \
-    opcache \
-    bcmath \
-    exif
+    docker-php-ext-install gd
+
+# intl ve zip eklentileri bellek yoğun olduğu için paralel derlemeyi kaldırıyoruz (veya kısıtlıyoruz)
+RUN docker-php-ext-install intl zip
 
 # Redis PHP eklentisini kuruyoruz
 RUN pecl install redis && \

@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y \
     build-essential cmake wget pkg-config autoconf bison re2c \
     libxml2-dev libsqlite3-dev libssl-dev \
     zlib1g-dev libcurl4-openssl-dev libpng-dev \
-    libjpeg-dev libonig-dev libzip-dev \
+    libjpeg-dev libonig-dev libzip-dev libzstd-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /usr/src
@@ -50,6 +50,16 @@ RUN phpize && \
     ./configure --enable-openssl --enable-swoole-curl && \
     make -j$(nproc) && make install
 
+# 6. Madde: Zstandard (zstd) Sıkıştırma Kurulumu
+WORKDIR /usr/src
+RUN wget https://pecl.php.net/get/zstd-0.13.3.tgz && \
+    tar -xzf zstd-0.13.3.tgz
+
+WORKDIR /usr/src/zstd-0.13.3
+RUN phpize && \
+    ./configure && \
+    make -j$(nproc) && make install
+
 # 2. Aşama: Çalışma Zamanı İmajı
 FROM ubuntu:22.04
 
@@ -57,15 +67,16 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     libxml2 libsqlite3-0 libssl3 zlib1g \
     libcurl4 libpng16-16 libjpeg-turbo8 \
-    libonig5 libzip4 curl unzip \
+    libonig5 libzip4 curl unzip libzstd1 \
     && rm -rf /var/lib/apt/lists/*
 
 # Derlenmiş PHP ve Swoole binary'lerini kopyala
 COPY --from=builder /usr/local /usr/local
 
-# Swoole ve Opcache eklentilerini etkinleştir
+# Swoole, Opcache ve Zstd eklentilerini etkinleştir
 RUN mkdir -p /usr/local/lib/php.conf.d && \
     echo "extension=swoole.so" > /usr/local/lib/php.ini && \
+    echo "extension=zstd.so" >> /usr/local/lib/php.ini && \
     echo "zend_extension=opcache.so" >> /usr/local/lib/php.ini
 
 WORKDIR /var/www/html

@@ -55,6 +55,7 @@
         "name": "wordpress-app",
         "type": "web",
         "mode": "build",
+        "networkMode": "host",
         "build": {
           "context": ".",
           "dockerfile": "Dockerfile"

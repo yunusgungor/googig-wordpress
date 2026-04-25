@@ -11,7 +11,11 @@ define( 'DB_USER',     getenv('WORDPRESS_DB_USER') ?: 'wp_user' );
 define( 'DB_PASSWORD', getenv('WORDPRESS_DB_PASSWORD') ?: 'password' );
 define( 'DB_HOST',     getenv('WORDPRESS_DB_HOST') ?: 'localhost' );
 define( 'DB_CHARSET',  'utf8' );
-define( 'DB_COLLATE',  '' );
+if ( ! defined( 'WP_CACHE' ) ) {
+    // Kurulum sırasında (install.php) cache'i devre dışı bırakarak "table doesn't exist" hatasını engelle
+    $is_installing = defined('WP_INSTALLING') || (isset($_SERVER['PHP_SELF']) && strpos($_SERVER['PHP_SELF'], 'install.php') !== false);
+    define( 'WP_CACHE', !$is_installing );
+}
 
 /**#@+
  * Authentication unique keys and salts.
@@ -68,11 +72,7 @@ if ( ! defined( 'WP_REDIS_HOST' ) ) {
 if ( ! defined( 'WP_REDIS_PORT' ) ) {
     define( 'WP_REDIS_PORT', getenv('WP_REDIS_PORT') ?: 6379 );
 }
-if ( ! defined( 'WP_CACHE' ) ) {
-    // Kurulum sırasında (install.php) cache'i devre dışı bırakarak "table doesn't exist" hatasını engelle
-    $is_installing = defined('WP_INSTALLING') || (isset($_SERVER['PHP_SELF']) && strpos($_SERVER['PHP_SELF'], 'install.php') !== false);
-    define( 'WP_CACHE', !$is_installing );
-}
+
 
 /**
  * Performance & Filesystem Settings

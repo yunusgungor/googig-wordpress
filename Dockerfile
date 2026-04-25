@@ -44,10 +44,10 @@ RUN rm -f /etc/php82/php-fpm.d/www.conf && \
         echo 'group = nobody'; \
         echo 'listen = 127.0.0.1:9000'; \
         echo 'pm = dynamic'; \
-        echo 'pm.max_children = 4'; \
-        echo 'pm.start_servers = 1'; \
+        echo 'pm.max_children = 10'; \
+        echo 'pm.start_servers = 2'; \
         echo 'pm.min_spare_servers = 1'; \
-        echo 'pm.max_spare_servers = 2'; \
+        echo 'pm.max_spare_servers = 4'; \
         echo 'clear_env = no'; \
         echo 'catch_workers_output = yes'; \
         echo 'php_admin_value[error_log] = /dev/stderr'; \
@@ -73,6 +73,7 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-s
 RUN mkdir -p /var/www/html/wp-content/uploads && \
     mkdir -p /run/nginx && \
     chown -R nobody:nobody /var/www/html && \
+    chown -R nobody:nobody /var/lib/nginx && \
     chmod -R 755 /var/www/html/wp-content/uploads
 
 # Nginx ve Başlatıcı Betiği kopyala

@@ -74,7 +74,7 @@
           "WORDPRESS_DB_USER": "wp_user",
           "WORDPRESS_DB_PASSWORD": "cokgizlisifre123",
           "WORDPRESS_DB_NAME": "wp_database",
-          "WORDPRESS_CONFIG_EXTRA": "define('WP_REDIS_HOST', 'wordpress-redis'); define('WP_REDIS_PORT', '6379'); define('DISABLE_WP_CRON', true); define('WP_POST_REVISIONS', 3);"
+          "WORDPRESS_CONFIG_EXTRA": "define('WP_REDIS_HOST', 'wordpress-redis'); define('WP_REDIS_PORT', '6379'); define('WP_POST_REVISIONS', 3);"
         },
         "dependsOn": [
           "wordpress-db",

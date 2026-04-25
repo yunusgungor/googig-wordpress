@@ -23,8 +23,7 @@ RUN apk add --no-cache \
     php82-dom \
     nginx \
     curl \
-    unzip \
-    && ln -s /usr/bin/php82 /usr/bin/php
+    unzip
 
 # Opcache, Zstd ve JIT Ayarları
 RUN echo "opcache.enable=1" >> /etc/php82/conf.d/00_opcache.ini && \

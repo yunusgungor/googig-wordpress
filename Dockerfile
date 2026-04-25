@@ -88,6 +88,13 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stab
     rm redis-cache.latest-stable.zip && \
     cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php
 
+# Güçlü Bir Sayfa Önbellekleme: WP Super Cache Eklentisini Hazırla
+RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip && \
+    unzip wp-super-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
+    rm wp-super-cache.latest-stable.zip && \
+    # Gelişmiş önbellek drop-in dosyasını içeri kopyala
+    cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-phase1.php /var/www/html/wp-content/advanced-cache.php
+
 # PHP için yetkilendirme (Swoole/FPM fark etmeksizin web-server kullanıcısı)
 RUN groupadd -g 1000 www-data && useradd -u 1000 -g www-data -s /bin/false www-data && \
     chown -R www-data:www-data /var/www/html

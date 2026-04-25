@@ -70,6 +70,7 @@
           "wp-themes"
         ],
         "env": {
+          "SERVER_NAME": ":80",
           "WORDPRESS_DB_HOST": "wordpress-db",
           "WORDPRESS_DB_USER": "wp_user",
           "WORDPRESS_DB_PASSWORD": "cokgizlisifre123",
@@ -84,8 +85,11 @@
       {
         "name": "wordpress-db",
         "type": "worker",
-        "mode": "image",
-        "image": "mysql:8.0",
+        "mode": "build",
+        "build": {
+          "context": ".",
+          "dockerfile": "db.Dockerfile"
+        },
         "volumes": [
           "db-data"
         ],

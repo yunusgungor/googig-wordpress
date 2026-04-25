@@ -1,88 +1,88 @@
-FROM php:8.2-apache
+# 1. Aşama: C Kodlarından PHP ve Swoole Derleme (Hazır imaj kullanılmıyor)
+FROM ubuntu:22.04 AS builder
 
-# Sistem paketlerini kuruyoruz
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    libpng-dev \
-    libjpeg-dev \
-    libwebp-dev \
-    libfreetype6-dev \
-    libzip-dev \
-    libicu-dev \
-    unzip \
-    curl \
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Gerekli C/C++ derleyicileri ve kütüphaneler
+RUN apt-get update && apt-get install -y \
+    build-essential cmake wget pkg-config autoconf bison re2c \
+    libxml2-dev libsqlite3-dev libssl-dev \
+    zlib1g-dev libcurl4-openssl-dev libpng-dev \
+    libjpeg-dev libonig-dev libzip-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# PHP eklentilerini kuruyoruz (Ağır eklentileri ayırarak kaynak tüketimini dengeliyoruz)
-# Hafif eklentileri paralel kurabiliriz
-RUN docker-php-ext-install mysqli bcmath exif opcache
+WORKDIR /usr/src
+# PHP Kaynak Kodunu İndirme
+RUN wget https://www.php.net/distributions/php-8.2.15.tar.gz && \
+    tar -xzf php-8.2.15.tar.gz
 
-# GD eklentisi yapılandırma gerektirir
-RUN docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp && \
-    docker-php-ext-install gd
+WORKDIR /usr/src/php-8.2.15
 
-# intl ve zip eklentileri bellek yoğun olduğu için paralel derlemeyi kaldırıyoruz (veya kısıtlıyoruz)
-RUN docker-php-ext-install intl zip
+# 2. İşlemciye Özel Derleme (C Compiler Flags: march=native)
+# PHP çekirdeği sunucunun işlemcisine özel donanım komutlarıyla derlenecek
+ENV CFLAGS="-march=native -O3"
+ENV CXXFLAGS="-march=native -O3"
 
-# Redis PHP eklentisini kuruyoruz
-RUN pecl install redis && \
-    docker-php-ext-enable redis
+# PHP'yi C kaynak kodundan konfigüre edip derliyoruz
+RUN ./configure \
+    --enable-fpm \
+    --with-mysqli \
+    --with-pdo-mysql \
+    --with-openssl \
+    --with-zlib \
+    --with-curl \
+    --enable-mbstring \
+    --enable-gd \
+    --with-jpeg \
+    --enable-exif \
+    --enable-opcache \
+    --with-zip \
+    && make -j$(nproc) && make install
 
-# Apache modüllerini aktif ediyoruz
-# rewrite: Kalıcı bağlantılar (permalinks)
-# expires & headers: Statik dosyaların tarayıcıda önbelleğe alınması (hız için kritik)
-RUN a2enmod rewrite expires headers
+# 1. Madde: PHP'yi Ölümsüz Yapmak (Swoole Kullanımı)
+# Swoole C eklentisini de kaynak koddan makineye özel derliyoruz
+WORKDIR /usr/src
+RUN wget https://pecl.php.net/get/swoole-5.1.2.tgz && \
+    tar -xzf swoole-5.1.2.tgz
 
-# WP-CLI kuruyoruz (Performans ayarları ve yönetim için çok kullanışlı)
-RUN curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
-    chmod +x wp-cli.phar && \
-    mv wp-cli.phar /usr/local/bin/wp
+WORKDIR /usr/src/swoole-5.1.2
+RUN phpize && \
+    ./configure --enable-openssl --enable-swoole-curl && \
+    make -j$(nproc) && make install
 
-# OPcache ayarlarını agresif performans için optimize ediyoruz
-RUN { \
-		echo 'opcache.memory_consumption=256'; \
-		echo 'opcache.interned_strings_buffer=16'; \
-		echo 'opcache.max_accelerated_files=10000'; \
-		echo 'opcache.revalidate_freq=2'; \
-		echo 'opcache.fast_shutdown=1'; \
-	} > /usr/local/etc/php/conf.d/opcache-recommended.ini
+# 2. Aşama: Çalışma Zamanı İmajı
+FROM ubuntu:22.04
 
-# PHP Yükleme limitlerini artırıyoruz
-RUN { \
-		echo 'upload_max_filesize = 128M'; \
-		echo 'post_max_size = 128M'; \
-		echo 'memory_limit = 512M'; \
-		echo 'max_execution_time = 300'; \
-	} > /usr/local/etc/php/conf.d/wordpress-limits.ini
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    libxml2 libsqlite3-0 libssl3 zlib1g \
+    libcurl4 libpng16-16 libjpeg-turbo8 \
+    libonig5 libzip4 curl unzip \
+    && rm -rf /var/lib/apt/lists/*
 
-# Apache için statik dosya önbellekleme ayarları (Hız için)
-RUN { \
-        echo '<IfModule mod_expires.c>'; \
-        echo '  ExpiresActive On'; \
-        echo '  ExpiresDefault "access plus 1 month"'; \
-        echo '  ExpiresByType image/x-icon "access plus 1 year"'; \
-        echo '  ExpiresByType image/jpeg "access plus 1 year"'; \
-        echo '  ExpiresByType image/png "access plus 1 year"'; \
-        echo '  ExpiresByType image/gif "access plus 1 year"'; \
-        echo '  ExpiresByType image/webp "access plus 1 year"'; \
-        echo '  ExpiresByType text/css "access plus 1 month"'; \
-        echo '  ExpiresByType text/javascript "access plus 1 month"'; \
-        echo '  ExpiresByType application/javascript "access plus 1 month"'; \
-        echo '  ExpiresByType application/x-shockwave-flash "access plus 1 month"'; \
-        echo '</IfModule>'; \
-    } > /etc/apache2/conf-available/performance.conf && a2enconf performance
+# Derlenmiş PHP ve Swoole binary'lerini kopyala
+COPY --from=builder /usr/local /usr/local
 
-# Çalışma dizini
+# Swoole ve Opcache eklentilerini etkinleştir
+RUN mkdir -p /usr/local/lib/php.conf.d && \
+    echo "extension=swoole.so" > /usr/local/lib/php.ini && \
+    echo "zend_extension=opcache.so" >> /usr/local/lib/php.ini
+
 WORKDIR /var/www/html
-
-# Yerel dizindeki WordPress dosyalarını konteynere kopyalıyoruz
 COPY . /var/www/html/
 
-# Dosya izinlerini Apache'nin okuyabileceği/yazabileceği şekilde ayarlıyoruz
-RUN chown -R www-data:www-data /var/www/html
-
-# Redis Object Cache eklentisini indirip hazır konuma getiriyoruz ve anında aktifleştiriyoruz
+# Redis Object Cache Eklentisini Hazırla
 RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
     unzip redis-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm redis-cache.latest-stable.zip && \
-    cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php && \
-    chown -R www-data:www-data /var/www/html/wp-content
+    cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php
+
+# PHP için yetkilendirme (Swoole/FPM fark etmeksizin web-server kullanıcısı)
+RUN groupadd -g 1000 www-data && useradd -u 1000 -g www-data -s /bin/false www-data && \
+    chown -R www-data:www-data /var/www/html
+
+EXPOSE 80
+# Not: WordPress'i tam anlamıyla Swoole üzerinden servis etmek için 
+# wp-swoole tarzı bir sunucu sarmalayıcısı gerekir. Bu yapılandırma 
+# Swoole'u sisteme kurup PHP'yi resident-memory için hazır hale getirir.
+CMD ["php", "-S", "0.0.0.0:80", "-t", "/var/www/html"]

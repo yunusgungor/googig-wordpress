@@ -62,7 +62,7 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stab
 RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip && \
     unzip wp-super-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm wp-super-cache.latest-stable.zip && \
-    cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-phase1.php /var/www/html/wp-content/advanced-cache.php
+    echo "<?php define('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/'); include(WPCACHEHOME . 'wp-cache-phase1.php');" > /var/www/html/wp-content/advanced-cache.php
 
 # Yetkilendirme ve Uploads Klasörü İzni
 RUN mkdir -p /var/www/html/wp-content/uploads && \

@@ -10,13 +10,11 @@ RUN apt-get update && apt-get install -y \
     unzip curl nginx \
     && rm -rf /var/lib/apt/lists/*
 
-# PHP'nin kendi temel eklentilerini kur (C'den derlemek yerine docker-php komutlarıyla saniyeler içinde kurar)
-RUN docker-php-ext-configure gd --with-jpeg \
-    && docker-php-ext-install -j$(nproc) mysqli pdo_mysql opcache gd zip exif
+# mlocati aracı ile eklentileri derlemeden, doğrudan hazır (binary) olarak saniyeler içinde kur
+ADD https://github.com/mlocati/php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-# 1. Madde: PHP'yi Ölümsüz Yapmak (Swoole Kullanımı) ve Zstd
-RUN pecl install swoole-5.1.2 zstd \
-    && docker-php-ext-enable swoole zstd
+RUN chmod +x /usr/local/bin/install-php-extensions && \
+    install-php-extensions mysqli pdo_mysql opcache gd zip exif swoole zstd
 
 # Opcache, Zstd ve JIT (Just-In-Time) Ayarları
 RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \

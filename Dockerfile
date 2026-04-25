@@ -67,7 +67,13 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stab
 RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip && \
     unzip wp-super-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm wp-super-cache.latest-stable.zip && \
-    echo "<?php define('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/'); include(WPCACHEHOME . 'wp-cache-phase1.php');" > /var/www/html/wp-content/advanced-cache.php
+    cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-config-sample.php /var/www/html/wp-content/wp-cache-config.php && \
+    sed -i "s/\$cache_enabled = false;/\$cache_enabled = true;/g" /var/www/html/wp-content/wp-cache-config.php && \
+    { \
+        echo "<?php // Added by WP Super Cache"; \
+        echo "define('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/');"; \
+        echo "if (is_readable(WPCACHEHOME . 'wp-cache-phase1.php')) { include_once(WPCACHEHOME . 'wp-cache-phase1.php'); }"; \
+    } > /var/www/html/wp-content/advanced-cache.php
 
 # Yetkilendirme ve Uploads Klasörü İzni
 RUN mkdir -p /var/www/html/wp-content/uploads && \

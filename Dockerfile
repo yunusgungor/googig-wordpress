@@ -68,6 +68,7 @@ RUN apt-get update && apt-get install -y \
     libxml2 libsqlite3-0 libssl3 zlib1g \
     libcurl4 libpng16-16 libjpeg-turbo8 \
     libonig5 libzip4 curl unzip libzstd1 \
+    nginx \
     && rm -rf /var/lib/apt/lists/*
 
 # Derlenmiş PHP ve Swoole binary'lerini kopyala
@@ -79,12 +80,18 @@ RUN mkdir -p /usr/local/lib/php.conf.d && \
     echo "extension=zstd.so" >> /usr/local/lib/php.ini && \
     echo "zend_extension=opcache.so" >> /usr/local/lib/php.ini && \
     echo "opcache.enable=1" >> /usr/local/lib/php.ini && \
-    echo "opcache.memory_consumption=64" >> /usr/local/lib/php.ini
+    echo "opcache.memory_consumption=64" >> /usr/local/lib/php.ini && \
+    # 4. Madde: PHP JIT (Just-In-Time) Derleyicisini Açmak
+    echo "opcache.jit_buffer_size=64M" >> /usr/local/lib/php.ini && \
+    echo "opcache.jit=tracing" >> /usr/local/lib/php.ini
 
-# PHP-FPM Havuzu (OOM Koruması) Ayarları (Swoole kullanılmadığı durumlar için ana güvenlik)
+# PHP-FPM Havuzu (OOM Koruması) Ayarları
 RUN mkdir -p /usr/local/etc/php-fpm.d && \
     { \
         echo '[www]'; \
+        echo 'user = www-data'; \
+        echo 'group = www-data'; \
+        echo 'listen = 127.0.0.1:9000'; \
         echo 'pm = dynamic'; \
         echo 'pm.max_children = 4'; \
         echo 'pm.start_servers = 1'; \
@@ -112,8 +119,12 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-s
 RUN groupadd -g 1000 www-data && useradd -u 1000 -g www-data -s /bin/false www-data && \
     chown -R www-data:www-data /var/www/html
 
+# Nginx ve Başlatıcı Betiği kopyala
+COPY nginx.conf /etc/nginx/nginx.conf
+COPY start.sh /start.sh
+RUN chmod +x /start.sh
+
 EXPOSE 80
-# Not: WordPress'i tam anlamıyla Swoole üzerinden servis etmek için 
-# wp-swoole tarzı bir sunucu sarmalayıcısı gerekir. Bu yapılandırma 
-# Swoole'u sisteme kurup PHP'yi resident-memory için hazır hale getirir.
-CMD ["php", "-S", "0.0.0.0:80", "-t", "/var/www/html"]
+
+# Microcaching (Nginx) ve PHP-FPM'i başlatan sarmalayıcı script
+CMD ["/start.sh"]

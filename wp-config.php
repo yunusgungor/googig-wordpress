@@ -37,11 +37,19 @@ $table_prefix = getenv('WORDPRESS_TABLE_PREFIX') ?: 'wp_';
 define( 'WP_DEBUG', (bool)getenv('WORDPRESS_DEBUG') ?: false );
 
 /**
- * Reverse Proxy / SSL Support
+ * Reverse Proxy / SSL Support & Dynamic URLs
  */
 if (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https') {
     $_SERVER['HTTPS'] = 'on';
 }
+
+// Yönlendirme döngülerini engellemek için URL'leri dinamik belirle
+$http_host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+$is_https = (isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on') || (isset($_SERVER['HTTP_X_FORWARDED_PROTO']) && $_SERVER['HTTP_X_FORWARDED_PROTO'] === 'https');
+$protocol = $is_https ? 'https://' : 'http://';
+
+define( 'WP_HOME', $protocol . $http_host );
+define( 'WP_SITEURL', $protocol . $http_host );
 
 /**
  * Custom Config Extra (Environment overrides)

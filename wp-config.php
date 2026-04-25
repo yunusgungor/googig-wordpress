@@ -69,7 +69,9 @@ if ( ! defined( 'WP_REDIS_PORT' ) ) {
     define( 'WP_REDIS_PORT', getenv('WP_REDIS_PORT') ?: 6379 );
 }
 if ( ! defined( 'WP_CACHE' ) ) {
-    define( 'WP_CACHE', true );
+    // Kurulum sırasında (install.php) cache'i devre dışı bırakarak "table doesn't exist" hatasını engelle
+    $is_installing = defined('WP_INSTALLING') || (isset($_SERVER['PHP_SELF']) && strpos($_SERVER['PHP_SELF'], 'install.php') !== false);
+    define( 'WP_CACHE', !$is_installing );
 }
 
 /**

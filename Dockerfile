@@ -1,93 +1,32 @@
-# 1. Aşama: C Kodlarından PHP ve Swoole Derleme (Hazır imaj kullanılmıyor)
-FROM ubuntu:22.04 AS builder
+FROM php:8.2-fpm
 
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Gerekli C/C++ derleyicileri ve kütüphaneler
+# Sistem bağımlılıklarını kur
 RUN apt-get update && apt-get install -y \
-    build-essential cmake wget pkg-config autoconf bison re2c \
     libxml2-dev libsqlite3-dev libssl-dev \
     zlib1g-dev libcurl4-openssl-dev libpng-dev \
     libjpeg-dev libonig-dev libzip-dev libzstd-dev \
+    unzip curl nginx \
     && rm -rf /var/lib/apt/lists/*
 
-WORKDIR /usr/src
-# PHP Kaynak Kodunu İndirme
-RUN wget https://www.php.net/distributions/php-8.2.15.tar.gz && \
-    tar -xzf php-8.2.15.tar.gz
+# PHP'nin kendi temel eklentilerini kur (C'den derlemek yerine docker-php komutlarıyla saniyeler içinde kurar)
+RUN docker-php-ext-configure gd --with-jpeg \
+    && docker-php-ext-install -j$(nproc) mysqli pdo_mysql opcache gd zip exif
 
-WORKDIR /usr/src/php-8.2.15
+# 1. Madde: PHP'yi Ölümsüz Yapmak (Swoole Kullanımı) ve Zstd
+RUN pecl install swoole-5.1.2 zstd \
+    && docker-php-ext-enable swoole zstd
 
-# 2. İşlemciye Özel Derleme (C Compiler Flags: march=native)
-# PHP çekirdeği sunucunun işlemcisine özel donanım komutlarıyla derlenecek
-ENV CFLAGS="-march=native -O3"
-ENV CXXFLAGS="-march=native -O3"
-
-# PHP'yi C kaynak kodundan konfigüre edip derliyoruz
-RUN ./configure \
-    --enable-fpm \
-    --with-mysqli \
-    --with-pdo-mysql \
-    --with-openssl \
-    --with-zlib \
-    --with-curl \
-    --enable-mbstring \
-    --enable-gd \
-    --with-jpeg \
-    --enable-exif \
-    --enable-opcache \
-    --with-zip \
-    && make -j$(nproc) && make install
-
-# 1. Madde: PHP'yi Ölümsüz Yapmak (Swoole Kullanımı)
-# Swoole C eklentisini de kaynak koddan makineye özel derliyoruz
-WORKDIR /usr/src
-RUN wget https://pecl.php.net/get/swoole-5.1.2.tgz && \
-    tar -xzf swoole-5.1.2.tgz
-
-WORKDIR /usr/src/swoole-5.1.2
-RUN phpize && \
-    ./configure --enable-openssl --enable-swoole-curl && \
-    make -j$(nproc) && make install
-
-# 6. Madde: Zstandard (zstd) Sıkıştırma Kurulumu
-WORKDIR /usr/src
-RUN wget https://pecl.php.net/get/zstd-0.13.3.tgz && \
-    tar -xzf zstd-0.13.3.tgz
-
-WORKDIR /usr/src/zstd-0.13.3
-RUN phpize && \
-    ./configure && \
-    make -j$(nproc) && make install
-
-# 2. Aşama: Çalışma Zamanı İmajı
-FROM ubuntu:22.04
-
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y \
-    libxml2 libsqlite3-0 libssl3 zlib1g \
-    libcurl4 libpng16-16 libjpeg-turbo8 \
-    libonig5 libzip4 curl unzip libzstd1 \
-    nginx \
-    && rm -rf /var/lib/apt/lists/*
-
-# Derlenmiş PHP ve Swoole binary'lerini kopyala
-COPY --from=builder /usr/local /usr/local
-
-# Swoole, Opcache ve Zstd eklentilerini etkinleştir ve yapılandır
-RUN mkdir -p /usr/local/lib/php.conf.d && \
-    echo "extension=swoole.so" > /usr/local/lib/php.ini && \
-    echo "extension=zstd.so" >> /usr/local/lib/php.ini && \
-    echo "zend_extension=opcache.so" >> /usr/local/lib/php.ini && \
-    echo "opcache.enable=1" >> /usr/local/lib/php.ini && \
-    echo "opcache.memory_consumption=64" >> /usr/local/lib/php.ini && \
-    # 4. Madde: PHP JIT (Just-In-Time) Derleyicisini Açmak
-    echo "opcache.jit_buffer_size=64M" >> /usr/local/lib/php.ini && \
-    echo "opcache.jit=tracing" >> /usr/local/lib/php.ini
+# Opcache, Zstd ve JIT (Just-In-Time) Ayarları
+RUN echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.memory_consumption=64" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.jit_buffer_size=64M" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "opcache.jit=tracing" >> /usr/local/etc/php/conf.d/docker-php-ext-opcache.ini && \
+    echo "zend.enable_gc=Off" >> /usr/local/etc/php/conf.d/custom-gc.ini
 
 # PHP-FPM Havuzu (OOM Koruması) Ayarları
-RUN mkdir -p /usr/local/etc/php-fpm.d && \
-    { \
+RUN { \
         echo '[www]'; \
         echo 'user = www-data'; \
         echo 'group = www-data'; \
@@ -97,7 +36,7 @@ RUN mkdir -p /usr/local/etc/php-fpm.d && \
         echo 'pm.start_servers = 1'; \
         echo 'pm.min_spare_servers = 1'; \
         echo 'pm.max_spare_servers = 2'; \
-    } > /usr/local/etc/php-fpm.d/www.conf
+    } > /usr/local/etc/php-fpm.d/zz-docker.conf
 
 WORKDIR /var/www/html
 COPY . /var/www/html/
@@ -112,12 +51,12 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stab
 RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip && \
     unzip wp-super-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm wp-super-cache.latest-stable.zip && \
-    # Gelişmiş önbellek drop-in dosyasını içeri kopyala
     cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-phase1.php /var/www/html/wp-content/advanced-cache.php
 
-# PHP için yetkilendirme (Swoole/FPM fark etmeksizin web-server kullanıcısı)
-RUN groupadd -g 1000 www-data && useradd -u 1000 -g www-data -s /bin/false www-data && \
-    chown -R www-data:www-data /var/www/html
+# Yetkilendirme ve Uploads Klasörü İzni
+RUN mkdir -p /var/www/html/wp-content/uploads && \
+    chown -R www-data:www-data /var/www/html && \
+    chmod -R 755 /var/www/html/wp-content/uploads
 
 # Nginx ve Başlatıcı Betiği kopyala
 COPY nginx.conf /etc/nginx/nginx.conf
@@ -126,5 +65,4 @@ RUN chmod +x /start.sh
 
 EXPOSE 80
 
-# Microcaching (Nginx) ve PHP-FPM'i başlatan sarmalayıcı script
 CMD ["/start.sh"]

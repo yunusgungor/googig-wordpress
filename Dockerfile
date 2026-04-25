@@ -19,6 +19,10 @@ RUN apk add --no-cache \
     php82-xml \
     php82-phar \
     php82-session \
+    php82-ctype \
+    php82-tokenizer \
+    php82-fileinfo \
+    php82-xmlreader \
     php82-iconv \
     php82-dom \
     nginx \

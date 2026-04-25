@@ -33,7 +33,8 @@ RUN echo "opcache.enable=1" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "zend.enable_gc=Off" >> /etc/php82/conf.d/custom-gc.ini
 
 # PHP-FPM Havuzu (OOM Koruması) Ayarları
-RUN { \
+RUN rm -f /etc/php82/php-fpm.d/www.conf && \
+    { \
         echo '[www]'; \
         echo 'user = nobody'; \
         echo 'group = nobody'; \
@@ -43,6 +44,9 @@ RUN { \
         echo 'pm.start_servers = 1'; \
         echo 'pm.min_spare_servers = 1'; \
         echo 'pm.max_spare_servers = 2'; \
+        echo 'catch_workers_output = yes'; \
+        echo 'php_admin_value[error_log] = /dev/stderr'; \
+        echo 'php_admin_flag[log_errors] = on'; \
     } > /etc/php82/php-fpm.d/zz-docker.conf
 
 WORKDIR /var/www/html
@@ -62,6 +66,7 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-s
 
 # Yetkilendirme ve Uploads Klasörü İzni
 RUN mkdir -p /var/www/html/wp-content/uploads && \
+    mkdir -p /run/nginx && \
     chown -R nobody:nobody /var/www/html && \
     chmod -R 755 /var/www/html/wp-content/uploads
 

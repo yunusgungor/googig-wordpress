@@ -70,7 +70,6 @@
           "wp-themes"
         ],
         "env": {
-          "SERVER_NAME": ":80",
           "WORDPRESS_DB_HOST": "wordpress-db",
           "WORDPRESS_DB_USER": "wp_user",
           "WORDPRESS_DB_PASSWORD": "cokgizlisifre123",

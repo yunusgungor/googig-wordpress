@@ -44,6 +44,7 @@ RUN rm -f /etc/php82/php-fpm.d/www.conf && \
         echo 'pm.start_servers = 1'; \
         echo 'pm.min_spare_servers = 1'; \
         echo 'pm.max_spare_servers = 2'; \
+        echo 'clear_env = no'; \
         echo 'catch_workers_output = yes'; \
         echo 'php_admin_value[error_log] = /dev/stderr'; \
         echo 'php_admin_flag[log_errors] = on'; \

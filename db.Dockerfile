@@ -47,13 +47,14 @@ RUN groupadd mysql && useradd -r -g mysql -s /bin/false mysql && \
     mkdir -p /var/lib/mysql /var/run/mysqld /etc/mysql/conf.d && \
     chown -R mysql:mysql /var/lib/mysql /var/run/mysqld /usr/local/mysql
 
-# 3. Veritabanının Beynini RAM'e Taşımak (tmpfs /dev/shm)
+# 3. Veritabanının Beynini RAM'e Taşımak (tmpfs /dev/shm) ve RAM Limiti (OOM Koruması)
 RUN { \
         echo '[mysqld]'; \
         echo 'user=mysql'; \
         echo 'datadir=/var/lib/mysql'; \
         echo 'socket=/var/run/mysqld/mysqld.sock'; \
         echo 'tmpdir=/dev/shm'; \
+        echo 'innodb_buffer_pool_size=128M'; \
     } > /etc/mysql/my.cnf
 
 USER mysql

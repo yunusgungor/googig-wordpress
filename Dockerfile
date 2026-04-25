@@ -73,11 +73,24 @@ RUN apt-get update && apt-get install -y \
 # Derlenmiş PHP ve Swoole binary'lerini kopyala
 COPY --from=builder /usr/local /usr/local
 
-# Swoole, Opcache ve Zstd eklentilerini etkinleştir
+# Swoole, Opcache ve Zstd eklentilerini etkinleştir ve yapılandır
 RUN mkdir -p /usr/local/lib/php.conf.d && \
     echo "extension=swoole.so" > /usr/local/lib/php.ini && \
     echo "extension=zstd.so" >> /usr/local/lib/php.ini && \
-    echo "zend_extension=opcache.so" >> /usr/local/lib/php.ini
+    echo "zend_extension=opcache.so" >> /usr/local/lib/php.ini && \
+    echo "opcache.enable=1" >> /usr/local/lib/php.ini && \
+    echo "opcache.memory_consumption=64" >> /usr/local/lib/php.ini
+
+# PHP-FPM Havuzu (OOM Koruması) Ayarları (Swoole kullanılmadığı durumlar için ana güvenlik)
+RUN mkdir -p /usr/local/etc/php-fpm.d && \
+    { \
+        echo '[www]'; \
+        echo 'pm = dynamic'; \
+        echo 'pm.max_children = 4'; \
+        echo 'pm.start_servers = 1'; \
+        echo 'pm.min_spare_servers = 1'; \
+        echo 'pm.max_spare_servers = 2'; \
+    } > /usr/local/etc/php-fpm.d/www.conf
 
 WORKDIR /var/www/html
 COPY . /var/www/html/

@@ -83,6 +83,10 @@ if ( ! defined( 'FS_METHOD' ) ) {
 if ( ! defined( 'WP_MEMORY_LIMIT' ) ) {
     define( 'WP_MEMORY_LIMIT', '512M' );
 }
+define( 'WP_POST_REVISIONS', 10 );
+define( 'EMPTY_TRASH_DAYS', 7 );
+define( 'WP_REDIS_DATABASE', 0 );
+define( 'WP_REDIS_MAXTTL', 3600 );
 
 /* Add any custom values between this line and the "stop editing" line. */
 

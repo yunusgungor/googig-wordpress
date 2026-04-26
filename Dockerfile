@@ -23,6 +23,10 @@ RUN apk add --no-cache \
     php82-tokenizer \
     php82-fileinfo \
     php82-xmlreader \
+    php82-xmlwriter \
+    php82-simplexml \
+    php82-bcmath \
+    php82-intl \
     php82-iconv \
     php82-dom \
     nginx \
@@ -44,10 +48,10 @@ RUN rm -f /etc/php82/php-fpm.d/www.conf && \
         echo 'group = nobody'; \
         echo 'listen = 127.0.0.1:9000'; \
         echo 'pm = dynamic'; \
-        echo 'pm.max_children = 10'; \
-        echo 'pm.start_servers = 2'; \
-        echo 'pm.min_spare_servers = 1'; \
-        echo 'pm.max_spare_servers = 4'; \
+        echo 'pm.max_children = 30'; \
+        echo 'pm.start_servers = 4'; \
+        echo 'pm.min_spare_servers = 2'; \
+        echo 'pm.max_spare_servers = 6'; \
         echo 'clear_env = no'; \
         echo 'catch_workers_output = yes'; \
         echo 'php_admin_value[error_log] = /dev/stderr'; \

@@ -61,7 +61,8 @@
         },
         "ports": [
           {
-            "target": 80
+            "target": 80,
+            "healthCheck": "/health"
           }
         ],
         "volumes": [

@@ -29,7 +29,7 @@ wp plugin activate redis-cache --allow-root 2>/dev/null && echo "✅ Redis Cache
 wp plugin activate wp-super-cache --allow-root 2>/dev/null && echo "✅ WP Super Cache aktif"
 wp plugin activate autoptimize --allow-root 2>/dev/null && echo "✅ Autoptimize aktif"
 wp plugin activate wp-asset-clean-up --allow-root 2>/dev/null && echo "✅ Asset CleanUp aktif"
-wp plugin activate wp-smushit --allow-root 2>/dev/null && echo "✅ Smush aktif"
+wp plugin activate ewww-image-optimizer --allow-root 2>/dev/null && echo "✅ EWWW Image Optimizer aktif"
 
 # Redis Object Cache'i etkinleştir
 echo "🔧 Redis Object Cache yapılandırılıyor..."
@@ -56,22 +56,22 @@ echo "🔧 Asset CleanUp yapılandırılıyor..."
 wp option update wpacu_settings '{"test_mode":"0","dashboard_show":"1","hide_core_files":"1","input_style":"enhanced","fetch_cached_files_details":"1","disable_emojis":"1","disable_oembed":"1","disable_jquery_migrate":"1","disable_comment_reply":"1"}' --format=json --allow-root
 echo "✅ Asset CleanUp optimal ayarlar uygulandı"
 
-# Smush Optimal Ayarları
-echo "🔧 Smush yapılandırılıyor..."
+# EWWW Image Optimizer Optimal Ayarları
+echo "🔧 EWWW Image Optimizer yapılandırılıyor..."
 
-# Smush temel ayarları
-wp option update wp-smush-settings '{"auto":"1","lossy":"1","strip_exif":"1","resize":"1","detection":"1","original":"0","backup":"0","png_to_jpg":"1","lazy_load":"1","usage":"0"}' --format=json --allow-root
+# EWWW temel ayarları
+wp option update ewww_image_optimizer_auto 1 --allow-root
+wp option update ewww_image_optimizer_jpg_level 30 --allow-root
+wp option update ewww_image_optimizer_png_level 20 --allow-root
+wp option update ewww_image_optimizer_metadata_remove 1 --allow-root
+wp option update ewww_image_optimizer_jpg_quality 82 --allow-root
+wp option update ewww_image_optimizer_lazy_load 1 --allow-root
+wp option update ewww_image_optimizer_webp 1 --allow-root
+wp option update ewww_image_optimizer_maxmediawidth 1920 --allow-root
+wp option update ewww_image_optimizer_maxmediaheight 1920 --allow-root
+wp option update ewww_image_optimizer_resize_detection 1 --allow-root
 
-# Smush lazy load ayarları
-wp option update wp-smush-lazy_load '{"format":{"iframe":"1","img":"1"},"output":{"content":"1","widgets":"1","thumbnails":"1","gravatars":"1"},"exclude":{"classes":"","urls":""},"fadein":{"duration":"400","delay":"0"},"spinner":{"selected":"0"},"placeholder":"1"}' --format=json --allow-root
-
-# Smush resize ayarları (max 1920px)
-wp option update wp-smush-resize_sizes '{"width":"1920","height":"1920"}' --format=json --allow-root
-
-# Smush CDN ayarları (local için kapalı)
-wp option update wp-smush-cdn '{"auto_resize":"0","webp":"1"}' --format=json --allow-root
-
-echo "✅ Smush optimal ayarlar uygulandı"
+echo "✅ EWWW Image Optimizer optimal ayarlar uygulandı"
 
 # WP Super Cache ayarları (zaten wp-cache-config.php ile yapılandırıldı)
 echo "✅ WP Super Cache zaten yapılandırılmış"
@@ -88,10 +88,10 @@ echo "  ✅ Redis Object Cache - Veritabanı sorgu cache"
 echo "  ✅ WP Super Cache - Sayfa cache"
 echo "  ✅ Autoptimize - CSS/JS optimize (aggregate, defer, inline)"
 echo "  ✅ Asset CleanUp - Gereksiz script temizleme"
-echo "  ✅ Smush - Görsel optimize (lossy, lazy load, WebP, max 1920px)"
+echo "  ✅ EWWW Image Optimizer - Görsel optimize (lossy, lazy load, WebP, max 1920px)"
 echo ""
 echo "🎯 Sonraki Adımlar:"
 echo "  1. WordPress Admin'e giriş yapın"
-echo "  2. Smush → Bulk Smush ile tüm görselleri optimize edin"
+echo "  2. Media → Bulk Optimize ile tüm görselleri optimize edin"
 echo "  3. Asset CleanUp ile sayfa bazında gereksiz script'leri temizleyin"
 echo "  4. Performans testi yapın (GTmetrix, PageSpeed Insights)"

@@ -108,10 +108,12 @@ RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plug
     unzip wp-asset-clean-up.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm wp-asset-clean-up.latest-stable.zip
 
-# Smush Eklentisi (Görsel Optimizasyonu)
-RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-smushit.latest-stable.zip && \
-    unzip wp-smushit.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
-    rm wp-smushit.latest-stable.zip
+# Smush Eklentisi (Görsel Optimizasyonu) - Büyük dosya, timeout riski var
+# Alternatif: EWWW Image Optimizer (daha küçük ve hızlı)
+RUN curl -fLsS --retry 5 --retry-delay 3 --connect-timeout 30 --max-time 120 \
+    -O https://downloads.wordpress.org/plugin/ewww-image-optimizer.latest-stable.zip && \
+    unzip -q ewww-image-optimizer.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
+    rm ewww-image-optimizer.latest-stable.zip
 
 # WP-CLI Kurulumu (Sistem Genelinde)
 RUN curl -fLsS --retry 3 --retry-delay 2 -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \

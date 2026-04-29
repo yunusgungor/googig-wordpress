@@ -45,6 +45,11 @@ function workpanel_auto_configure_plugins() {
         if (is_plugin_active('wp-smushit/wp-smush.php')) {
             workpanel_configure_smush();
         }
+        
+        // EWWW Image Optimizer Ayarları
+        if (is_plugin_active('ewww-image-optimizer/ewww-image-optimizer.php')) {
+            workpanel_configure_ewww();
+        }
 
         // Redis Cache Ayarları
         if (is_plugin_active('redis-cache/redis-cache.php')) {
@@ -169,6 +174,22 @@ function workpanel_configure_smush() {
     error_log('Workpanel: Smush configured successfully');
 }
 
+function workpanel_configure_ewww() {
+    // EWWW Image Optimizer Ayarları
+    update_option('ewww_image_optimizer_auto', 1);
+    update_option('ewww_image_optimizer_jpg_level', 30);  // Lossy
+    update_option('ewww_image_optimizer_png_level', 20);  // Lossy
+    update_option('ewww_image_optimizer_metadata_remove', 1);  // Strip EXIF
+    update_option('ewww_image_optimizer_jpg_quality', 82);  // Quality 82
+    update_option('ewww_image_optimizer_lazy_load', 1);  // Lazy load
+    update_option('ewww_image_optimizer_webp', 1);  // WebP
+    update_option('ewww_image_optimizer_maxmediawidth', 1920);  // Max width
+    update_option('ewww_image_optimizer_maxmediaheight', 1920);  // Max height
+    update_option('ewww_image_optimizer_resize_detection', 1);  // Resize detection
+    
+    error_log('Workpanel: EWWW Image Optimizer configured successfully');
+}
+
 function workpanel_configure_redis() {
     // Redis Object Cache zaten wp-config.php'de yapılandırılmış
     // Sadece enable etmeyi dene
@@ -186,12 +207,12 @@ function workpanel_config_success_notice() {
         <ul style="list-style: disc; margin-left: 20px;">
             <li>✅ <strong>Autoptimize:</strong> CSS/JS birleştirme ve minify aktif</li>
             <li>✅ <strong>Asset CleanUp:</strong> Gereksiz script temizleme aktif</li>
-            <li>✅ <strong>Smush:</strong> Görsel optimizasyonu aktif (lossy, lazy load, WebP)</li>
+            <li>✅ <strong>EWWW Image Optimizer:</strong> Görsel optimizasyonu aktif (lossy, lazy load, WebP)</li>
             <li>✅ <strong>Redis Cache:</strong> Object cache aktif</li>
         </ul>
         <p><strong>Sonraki Adımlar:</strong></p>
         <ol style="margin-left: 20px;">
-            <li>Smush → <strong>Bulk Smush</strong> ile tüm görselleri optimize edin</li>
+            <li>Media → <strong>Bulk Optimize</strong> ile tüm görselleri optimize edin</li>
             <li>Asset CleanUp ile sayfa bazında gereksiz script'leri temizleyin</li>
             <li>Performans testi yapın (GTmetrix, PageSpeed Insights)</li>
         </ol>

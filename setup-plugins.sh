@@ -135,16 +135,18 @@ echo "✅ Tüm eklentiler hazır"
 # Eklenti cache ve tools klasörlerini oluştur ve izinleri ayarla
 echo "📁 Eklenti klasörleri hazırlanıyor..."
 
-# Autoptimize cache klasörü
+# Autoptimize cache klasörü (775 izinleri - group write gerekli)
 if [ ! -d "/var/www/html/wp-content/cache/autoptimize" ]; then
-    mkdir -p /var/www/html/wp-content/cache/autoptimize
+    mkdir -p /var/www/html/wp-content/cache/autoptimize/css
+    mkdir -p /var/www/html/wp-content/cache/autoptimize/js
     chown -R nobody:nobody /var/www/html/wp-content/cache
-    chmod -R 755 /var/www/html/wp-content/cache
-    echo "✅ Autoptimize cache klasörü oluşturuldu"
+    chmod -R 775 /var/www/html/wp-content/cache
+    echo "✅ Autoptimize cache klasörü oluşturuldu (775)"
 else
-    chown -R nobody:nobody /var/www/html/wp-content/cache/autoptimize
-    chmod -R 755 /var/www/html/wp-content/cache/autoptimize
-    echo "✅ Autoptimize cache izinleri düzeltildi"
+    # Her zaman izinleri düzelt (Autoptimize cache clear sonrası root:root olabiliyor)
+    chown -R nobody:nobody /var/www/html/wp-content/cache
+    chmod -R 775 /var/www/html/wp-content/cache
+    echo "✅ Autoptimize cache izinleri düzeltildi (775)"
 fi
 
 # EWWW Image Optimizer tools klasörü

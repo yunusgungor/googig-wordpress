@@ -99,13 +99,14 @@ COPY wp-content/mu-plugins/workpanel-auto-config.php /var/www/html/wp-content/mu
 
 # Yetkilendirme ve Klasör İzinleri
 RUN mkdir -p /var/www/html/wp-content/uploads && \
-    mkdir -p /var/www/html/wp-content/cache/autoptimize && \
+    mkdir -p /var/www/html/wp-content/cache/autoptimize/css && \
+    mkdir -p /var/www/html/wp-content/cache/autoptimize/js && \
     mkdir -p /var/www/html/wp-content/ewww && \
     mkdir -p /run/nginx && \
     chown -R nobody:nobody /var/www/html && \
     chown -R nobody:nobody /var/lib/nginx && \
     chmod -R 755 /var/www/html/wp-content/uploads && \
-    chmod -R 755 /var/www/html/wp-content/cache && \
+    chmod -R 775 /var/www/html/wp-content/cache && \
     chmod -R 755 /var/www/html/wp-content/ewww
 
 # Nginx ve Başlatıcı Betiği kopyala

@@ -14,6 +14,11 @@ chown -R nobody:nobody /dev/shm/nginx-cache
 # Sistem Cron'u başlat (WP-Cron için)
 # Her 15 dakikada bir wp-cron.php çalıştır
 (crontab -l 2>/dev/null; echo "*/15 * * * * /var/www/html/cron-wp.sh") | crontab -
+
+# Her 5 dakikada bir Autoptimize cache izinlerini düzelt
+# (Autoptimize cache clear sonrası root:root olma sorununu önler)
+(crontab -l 2>/dev/null; echo "*/5 * * * * chown -R nobody:nobody /var/www/html/wp-content/cache && chmod -R 775 /var/www/html/wp-content/cache") | crontab -
+
 crond
 
 # WordPress eklenti yapılandırmasını arka planda başlat

@@ -83,8 +83,31 @@ if ( ! defined( 'FS_METHOD' ) ) {
 if ( ! defined( 'WP_MEMORY_LIMIT' ) ) {
     define( 'WP_MEMORY_LIMIT', '512M' );
 }
-define( 'WP_POST_REVISIONS', 10 );
+if ( ! defined( 'WP_MAX_MEMORY_LIMIT' ) ) {
+    define( 'WP_MAX_MEMORY_LIMIT', '512M' );
+}
+
+// Post Revisions Limiti (Veritabanı Optimizasyonu)
+define( 'WP_POST_REVISIONS', 3 );
 define( 'EMPTY_TRASH_DAYS', 7 );
+define( 'AUTOSAVE_INTERVAL', 300 ); // 5 dakika (varsayılan 60 saniye)
+
+// WP-Cron Devre Dışı (Sistem Cron Kullanılacak)
+define( 'DISABLE_WP_CRON', true );
+
+// Concatenate Scripts (Admin panelinde script birleştirme)
+define( 'CONCATENATE_SCRIPTS', true );
+
+// Compress CSS
+define( 'COMPRESS_CSS', true );
+
+// Compress Scripts
+define( 'COMPRESS_SCRIPTS', true );
+
+// Enforce SSL (Eğer HTTPS kullanıyorsanız)
+// define( 'FORCE_SSL_ADMIN', true );
+
+// Redis Ayarları
 define( 'WP_REDIS_DATABASE', 0 );
 define( 'WP_REDIS_MAXTTL', 3600 );
 

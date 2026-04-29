@@ -38,7 +38,15 @@ RUN echo "opcache.enable=1" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.memory_consumption=64" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.jit_buffer_size=64M" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.jit=tracing" >> /etc/php82/conf.d/00_opcache.ini && \
-    echo "zend.enable_gc=Off" >> /etc/php82/conf.d/custom-gc.ini
+    echo "opcache.interned_strings_buffer=16" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.max_accelerated_files=10000" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.revalidate_freq=60" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.fast_shutdown=1" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.enable_file_override=1" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.validate_timestamps=1" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "zend.enable_gc=Off" >> /etc/php82/conf.d/custom-gc.ini && \
+    echo "realpath_cache_size=4096K" >> /etc/php82/conf.d/custom-performance.ini && \
+    echo "realpath_cache_ttl=600" >> /etc/php82/conf.d/custom-performance.ini
 
 # PHP-FPM Havuzu (OOM Koruması) Ayarları
 RUN rm -f /etc/php82/php-fpm.d/www.conf && \
@@ -47,19 +55,29 @@ RUN rm -f /etc/php82/php-fpm.d/www.conf && \
         echo 'user = nobody'; \
         echo 'group = nobody'; \
         echo 'listen = 127.0.0.1:9000'; \
+        echo 'listen.backlog = 511'; \
         echo 'pm = dynamic'; \
         echo 'pm.max_children = 30'; \
         echo 'pm.start_servers = 4'; \
         echo 'pm.min_spare_servers = 2'; \
         echo 'pm.max_spare_servers = 6'; \
+        echo 'pm.max_requests = 500'; \
+        echo 'pm.process_idle_timeout = 10s'; \
         echo 'clear_env = no'; \
         echo 'catch_workers_output = yes'; \
         echo 'php_admin_value[error_log] = /dev/stderr'; \
         echo 'php_admin_flag[log_errors] = on'; \
+        echo 'request_terminate_timeout = 30s'; \
+        echo 'rlimit_files = 4096'; \
+        echo 'rlimit_core = 0'; \
     } > /etc/php82/php-fpm.d/zz-docker.conf
 
 WORKDIR /var/www/html
 COPY . /var/www/html/
+
+# Cron script'ini kopyala ve çalıştırılabilir yap
+COPY cron-wp.sh /var/www/html/cron-wp.sh
+RUN chmod +x /var/www/html/cron-wp.sh
 
 # Redis Object Cache Eklentisini Hazırla
 RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
@@ -75,6 +93,10 @@ RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-s
     sed -i "s/\$cache_enabled = false;/\$cache_enabled = true;/g" /var/www/html/wp-content/wp-cache-config.php && \
     cp /var/www/html/wp-content/plugins/wp-super-cache/advanced-cache.php /var/www/html/wp-content/advanced-cache.php && \
     sed -i "s|// WP SUPER CACHE 1.2|// WP SUPER CACHE 1.2\ndefine('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/');|" /var/www/html/wp-content/advanced-cache.php
+
+# mu-plugins klasörünü oluştur ve optimizasyon plugin'ini kopyala
+RUN mkdir -p /var/www/html/wp-content/mu-plugins
+COPY wp-content/mu-plugins/workpanel-optimizations.php /var/www/html/wp-content/mu-plugins/
 
 # Yetkilendirme ve Uploads Klasörü İzni
 RUN mkdir -p /var/www/html/wp-content/uploads && \

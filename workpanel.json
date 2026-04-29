@@ -97,7 +97,13 @@
           "MYSQL_DATABASE": "wp_database",
           "MYSQL_USER": "wp_user",
           "MYSQL_PASSWORD": "cokgizlisifre123"
-        }
+        },
+        "ports": [
+          {
+            "target": 3306,
+            "healthCheck": "tcp"
+          }
+        ]
       },
       {
         "name": "wordpress-redis",
@@ -106,6 +112,12 @@
         "image": "redis:7-alpine",
         "volumes": [
           "redis-data"
+        ],
+        "ports": [
+          {
+            "target": 6379,
+            "healthCheck": "tcp"
+          }
         ]
       }
     ]

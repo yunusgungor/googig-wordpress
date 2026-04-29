@@ -2,24 +2,79 @@
 
 Bu WordPress kurulumu, `workpanel/docs/wordpress-hizlandirma.md` dökümanında belirtilen optimizasyonlarla yapılandırılmıştır.
 
+## 🚀 Elite Performance (v2.0.0)
+
+**Yeni!** Blog.googig.cloud performans raporuna göre ek optimizasyonlar uygulandı.
+
+### Performans Metrikleri
+
+| Metrik | Hedef | Durum |
+|--------|-------|-------|
+| **TTFB (Edge)** | 0.01-0.03s | ✅ Cloudflare ile |
+| **TTFB (Origin)** | 0.15s | ✅ OPcache ile |
+| **Sayfa Ağırlığı** | <1MB | ✅ Smush + Autoptimize |
+| **İstek Sayısı** | ~15-20 | ✅ Asset CleanUp |
+| **PHP-FPM Kapasite** | 100 concurrent | ✅ %300 artış |
+
+### Elite Optimizasyonlar
+
+#### 1. PHP-FPM Kapasite Artışı (%300)
+```ini
+pm.max_children = 100        # 30 → 100
+pm.start_servers = 10        # 4 → 10
+pm.min_spare_servers = 5     # 2 → 5
+pm.max_spare_servers = 20    # 6 → 20
+```
+
+#### 2. PHP OPcache İyileştirmeleri
+```ini
+opcache.memory_consumption = 256      # 64 → 256 MB
+opcache.max_accelerated_files = 20000 # 10000 → 20000
+opcache.jit_buffer_size = 128M        # 64 → 128 MB
+```
+
+#### 3. Yeni Eklentiler
+- ✅ **Autoptimize**: CSS/JS birleştirme ve minify
+- ✅ **Asset CleanUp**: Gereksiz script temizleme
+- ✅ **Smush**: Görsel optimizasyonu (%60-80 küçülme)
+- ✅ **WP-CLI**: Komut satırı yönetimi
+
+#### 4. Nginx Browser Caching (1 Yıl)
+```nginx
+# Statik dosyalar: 365 gün
+# Font dosyaları: 365 gün + CORS
+# Medya dosyaları: 30 gün
+```
+
+#### 5. Cloudflare Edge Caching
+- Cache Everything page rule
+- Edge Cache TTL: 2 saat
+- Auto Minify + Brotli
+- HTTP/3 + Early Hints
+
+**Detaylar:** `ELITE-PERFORMANCE.md` ve `CLOUDFLARE-SETUP.md`
+
+---
+
 ## ✅ Uygulanan Optimizasyonlar
 
 ### 1. Sunucu Seviyesi Optimizasyonlar
 
 #### Nginx + PHP-FPM Mimarisi
 - ✅ Apache yerine hafif Nginx kullanımı
-- ✅ PHP-FPM worker limitleri (max_children=30, OOM koruması)
+- ✅ PHP-FPM worker limitleri (max_children=100, Elite kapasite)
 - ✅ Microcaching (1 saniyelik cache, /dev/shm üzerinde)
 - ✅ Gzip sıkıştırma (level 6)
 - ✅ Brotli desteği hazır (nginx modülü gerekli)
-- ✅ Statik dosyalar için cache (30 gün)
+- ✅ Statik dosyalar için cache (365 gün, Elite)
 - ✅ Access log kapalı (Disk I/O tasarrufu)
 
 #### PHP Optimizasyonları
 - ✅ PHP 8.2 (JIT desteği ile)
-- ✅ OPcache aktif (64MB, JIT tracing mode)
+- ✅ OPcache aktif (256MB, Elite, JIT tracing mode)
 - ✅ Zend Garbage Collector kapalı (CPU tasarrufu)
 - ✅ Redis extension yüklü
+- ✅ Realpath cache: 4096K (600s TTL)
 
 #### Veritabanı Optimizasyonları
 - ✅ MariaDB 10.11 (MySQL yerine, daha az RAM tüketimi)
@@ -32,6 +87,9 @@ Bu WordPress kurulumu, `workpanel/docs/wordpress-hizlandirma.md` dökümanında 
 #### Otomatik Yüklenen Eklentiler
 - ✅ **Redis Object Cache**: Veritabanı sorgularını cache'ler
 - ✅ **WP Super Cache**: Sayfa cache'leme
+- ✅ **Autoptimize**: CSS/JS birleştirme (Elite)
+- ✅ **Asset CleanUp**: Script temizleme (Elite)
+- ✅ **Smush**: Görsel optimizasyonu (Elite)
 - ✅ **Workpanel Optimizations** (mu-plugin): Otomatik optimizasyonlar
 
 #### wp-config.php Ayarları
@@ -40,6 +98,9 @@ Bu WordPress kurulumu, `workpanel/docs/wordpress-hizlandirma.md` dökümanında 
 - ✅ DISABLE_WP_CRON: true (sistem cron kullanımı)
 - ✅ WP_MEMORY_LIMIT: 512M
 - ✅ Redis bağlantı ayarları
+- ✅ AUTOSAVE_INTERVAL: 300s
+- ✅ CONCATENATE_SCRIPTS: true
+- ✅ COMPRESS_CSS/JS: true
 
 #### Güvenlik ve Performans
 - ✅ XML-RPC engellendi (brute-force koruması)

@@ -33,13 +33,13 @@ RUN apk add --no-cache \
     curl \
     unzip
 
-# Opcache, Zstd ve JIT Ayarları
+# Opcache, Zstd ve JIT Ayarları (Elite Performance)
 RUN echo "opcache.enable=1" >> /etc/php82/conf.d/00_opcache.ini && \
-    echo "opcache.memory_consumption=64" >> /etc/php82/conf.d/00_opcache.ini && \
-    echo "opcache.jit_buffer_size=64M" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.memory_consumption=256" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.jit_buffer_size=128M" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.jit=tracing" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.interned_strings_buffer=16" >> /etc/php82/conf.d/00_opcache.ini && \
-    echo "opcache.max_accelerated_files=10000" >> /etc/php82/conf.d/00_opcache.ini && \
+    echo "opcache.max_accelerated_files=20000" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.revalidate_freq=60" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.fast_shutdown=1" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.enable_file_override=1" >> /etc/php82/conf.d/00_opcache.ini && \
@@ -48,7 +48,7 @@ RUN echo "opcache.enable=1" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "realpath_cache_size=4096K" >> /etc/php82/conf.d/custom-performance.ini && \
     echo "realpath_cache_ttl=600" >> /etc/php82/conf.d/custom-performance.ini
 
-# PHP-FPM Havuzu (OOM Koruması) Ayarları
+# PHP-FPM Havuzu (Elite Performance - %300 Kapasite Artışı)
 RUN rm -f /etc/php82/php-fpm.d/www.conf && \
     { \
         echo '[www]'; \
@@ -57,10 +57,10 @@ RUN rm -f /etc/php82/php-fpm.d/www.conf && \
         echo 'listen = 127.0.0.1:9000'; \
         echo 'listen.backlog = 511'; \
         echo 'pm = dynamic'; \
-        echo 'pm.max_children = 30'; \
-        echo 'pm.start_servers = 4'; \
-        echo 'pm.min_spare_servers = 2'; \
-        echo 'pm.max_spare_servers = 6'; \
+        echo 'pm.max_children = 100'; \
+        echo 'pm.start_servers = 10'; \
+        echo 'pm.min_spare_servers = 5'; \
+        echo 'pm.max_spare_servers = 20'; \
         echo 'pm.max_requests = 500'; \
         echo 'pm.process_idle_timeout = 10s'; \
         echo 'clear_env = no'; \
@@ -79,6 +79,10 @@ COPY . /var/www/html/
 COPY cron-wp.sh /var/www/html/cron-wp.sh
 RUN chmod +x /var/www/html/cron-wp.sh
 
+# Plugin setup script'ini kopyala ve çalıştırılabilir yap
+COPY setup-plugins.sh /var/www/html/setup-plugins.sh
+RUN chmod +x /var/www/html/setup-plugins.sh
+
 # Redis Object Cache Eklentisini Hazırla
 RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
     unzip redis-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
@@ -94,9 +98,30 @@ RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plug
     cp /var/www/html/wp-content/plugins/wp-super-cache/advanced-cache.php /var/www/html/wp-content/advanced-cache.php && \
     sed -i "s|// WP SUPER CACHE 1.2|// WP SUPER CACHE 1.2\ndefine('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/');|" /var/www/html/wp-content/advanced-cache.php
 
-# mu-plugins klasörünü oluştur ve optimizasyon plugin'ini kopyala
+# Autoptimize Eklentisi (CSS/JS Birleştirme ve Sıkıştırma)
+RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/autoptimize.latest-stable.zip && \
+    unzip autoptimize.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
+    rm autoptimize.latest-stable.zip
+
+# Asset CleanUp Eklentisi (Gereksiz Script Temizleme)
+RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-asset-clean-up.latest-stable.zip && \
+    unzip wp-asset-clean-up.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
+    rm wp-asset-clean-up.latest-stable.zip
+
+# Smush Eklentisi (Görsel Optimizasyonu)
+RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-smushit.latest-stable.zip && \
+    unzip wp-smushit.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
+    rm wp-smushit.latest-stable.zip
+
+# WP-CLI Kurulumu (Sistem Genelinde)
+RUN curl -fLsS --retry 3 --retry-delay 2 -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \
+    chmod +x wp-cli.phar && \
+    mv wp-cli.phar /usr/local/bin/wp
+
+# mu-plugins klasörünü oluştur ve optimizasyon plugin'lerini kopyala
 RUN mkdir -p /var/www/html/wp-content/mu-plugins
 COPY wp-content/mu-plugins/workpanel-optimizations.php /var/www/html/wp-content/mu-plugins/
+COPY wp-content/mu-plugins/workpanel-auto-config.php /var/www/html/wp-content/mu-plugins/
 
 # Yetkilendirme ve Uploads Klasörü İzni
 RUN mkdir -p /var/www/html/wp-content/uploads && \

@@ -97,12 +97,16 @@ RUN mkdir -p /var/www/html/wp-content/mu-plugins
 COPY wp-content/mu-plugins/workpanel-optimizations.php /var/www/html/wp-content/mu-plugins/
 COPY wp-content/mu-plugins/workpanel-auto-config.php /var/www/html/wp-content/mu-plugins/
 
-# Yetkilendirme ve Uploads Klasörü İzni
+# Yetkilendirme ve Klasör İzinleri
 RUN mkdir -p /var/www/html/wp-content/uploads && \
+    mkdir -p /var/www/html/wp-content/cache/autoptimize && \
+    mkdir -p /var/www/html/wp-content/ewww && \
     mkdir -p /run/nginx && \
     chown -R nobody:nobody /var/www/html && \
     chown -R nobody:nobody /var/lib/nginx && \
-    chmod -R 755 /var/www/html/wp-content/uploads
+    chmod -R 755 /var/www/html/wp-content/uploads && \
+    chmod -R 755 /var/www/html/wp-content/cache && \
+    chmod -R 755 /var/www/html/wp-content/ewww
 
 # Nginx ve Başlatıcı Betiği kopyala
 COPY nginx.conf /etc/nginx/nginx.conf

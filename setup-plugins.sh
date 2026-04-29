@@ -132,6 +132,35 @@ fi
 cd /var/www/html
 echo "✅ Tüm eklentiler hazır"
 
+# Eklenti cache ve tools klasörlerini oluştur ve izinleri ayarla
+echo "📁 Eklenti klasörleri hazırlanıyor..."
+
+# Autoptimize cache klasörü
+if [ ! -d "/var/www/html/wp-content/cache/autoptimize" ]; then
+    mkdir -p /var/www/html/wp-content/cache/autoptimize
+    chown -R nobody:nobody /var/www/html/wp-content/cache
+    chmod -R 755 /var/www/html/wp-content/cache
+    echo "✅ Autoptimize cache klasörü oluşturuldu"
+else
+    chown -R nobody:nobody /var/www/html/wp-content/cache/autoptimize
+    chmod -R 755 /var/www/html/wp-content/cache/autoptimize
+    echo "✅ Autoptimize cache izinleri düzeltildi"
+fi
+
+# EWWW Image Optimizer tools klasörü
+if [ ! -d "/var/www/html/wp-content/ewww" ]; then
+    mkdir -p /var/www/html/wp-content/ewww
+    chown -R nobody:nobody /var/www/html/wp-content/ewww
+    chmod -R 755 /var/www/html/wp-content/ewww
+    echo "✅ EWWW tools klasörü oluşturuldu"
+else
+    chown -R nobody:nobody /var/www/html/wp-content/ewww
+    chmod -R 755 /var/www/html/wp-content/ewww
+    echo "✅ EWWW tools izinleri düzeltildi"
+fi
+
+echo "✅ Tüm klasörler hazır"
+
 # Eklentileri aktifleştir
 echo "📦 Eklentiler aktifleştiriliyor..."
 

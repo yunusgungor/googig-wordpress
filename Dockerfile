@@ -80,13 +80,13 @@ COPY cron-wp.sh /var/www/html/cron-wp.sh
 RUN chmod +x /var/www/html/cron-wp.sh
 
 # Redis Object Cache Eklentisini Hazırla
-RUN curl -fLsS -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
+RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
     unzip redis-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm redis-cache.latest-stable.zip && \
     cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php
 
 # WP Super Cache Eklentisini Hazırla
-RUN curl -fLsS -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip && \
+RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip && \
     unzip wp-super-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
     rm wp-super-cache.latest-stable.zip && \
     cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-config-sample.php /var/www/html/wp-content/wp-cache-config.php && \

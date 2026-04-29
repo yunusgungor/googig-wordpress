@@ -83,37 +83,9 @@ RUN chmod +x /var/www/html/cron-wp.sh
 COPY setup-plugins.sh /var/www/html/setup-plugins.sh
 RUN chmod +x /var/www/html/setup-plugins.sh
 
-# Redis Object Cache Eklentisini Hazırla
-RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip && \
-    unzip redis-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
-    rm redis-cache.latest-stable.zip && \
-    cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php
-
-# WP Super Cache Eklentisini Hazırla
-RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip && \
-    unzip wp-super-cache.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
-    rm wp-super-cache.latest-stable.zip && \
-    cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-config-sample.php /var/www/html/wp-content/wp-cache-config.php && \
-    sed -i "s/\$cache_enabled = false;/\$cache_enabled = true;/g" /var/www/html/wp-content/wp-cache-config.php && \
-    cp /var/www/html/wp-content/plugins/wp-super-cache/advanced-cache.php /var/www/html/wp-content/advanced-cache.php && \
-    sed -i "s|// WP SUPER CACHE 1.2|// WP SUPER CACHE 1.2\ndefine('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/');|" /var/www/html/wp-content/advanced-cache.php
-
-# Autoptimize Eklentisi (CSS/JS Birleştirme ve Sıkıştırma)
-RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/autoptimize.latest-stable.zip && \
-    unzip autoptimize.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
-    rm autoptimize.latest-stable.zip
-
-# Asset CleanUp Eklentisi (Gereksiz Script Temizleme)
-RUN curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-asset-clean-up.latest-stable.zip && \
-    unzip wp-asset-clean-up.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
-    rm wp-asset-clean-up.latest-stable.zip
-
-# Smush Eklentisi (Görsel Optimizasyonu) - Büyük dosya, timeout riski var
-# Alternatif: EWWW Image Optimizer (daha küçük ve hızlı)
-RUN curl -fLsS --retry 5 --retry-delay 3 --connect-timeout 30 --max-time 120 \
-    -O https://downloads.wordpress.org/plugin/ewww-image-optimizer.latest-stable.zip && \
-    unzip -q ewww-image-optimizer.latest-stable.zip -d /var/www/html/wp-content/plugins/ && \
-    rm ewww-image-optimizer.latest-stable.zip
+# NOT: Tüm eklentiler (Redis Cache, WP Super Cache, Autoptimize, Asset CleanUp, EWWW)
+# wp-content/plugins volume mount nedeniyle Dockerfile'da yüklenemiyor
+# Bunun yerine setup-plugins.sh scripti ile runtime'da yüklenecek
 
 # WP-CLI Kurulumu (Sistem Genelinde)
 RUN curl -fLsS --retry 3 --retry-delay 2 -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar && \

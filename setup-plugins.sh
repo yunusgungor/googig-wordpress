@@ -22,6 +22,116 @@ if [ $WAIT_COUNT -ge $MAX_WAIT ]; then
     exit 0
 fi
 
+# Yeni eklentileri indir ve kur (volume mount nedeniyle Dockerfile'da yapılamıyor)
+echo "📥 Tüm eklentiler indiriliyor..."
+
+# Redis Cache
+if [ ! -d "/var/www/html/wp-content/plugins/redis-cache" ]; then
+    echo "⬇️  Redis Cache indiriliyor..."
+    cd /tmp
+    curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/redis-cache.latest-stable.zip
+    unzip -q redis-cache.latest-stable.zip
+    mv redis-cache /var/www/html/wp-content/plugins/
+    rm redis-cache.latest-stable.zip
+    chown -R nobody:nobody /var/www/html/wp-content/plugins/redis-cache
+    
+    # object-cache.php drop-in dosyasını kopyala
+    cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php
+    chown nobody:nobody /var/www/html/wp-content/object-cache.php
+    echo "✅ Redis Cache kuruldu"
+else
+    echo "✅ Redis Cache zaten mevcut"
+    # object-cache.php yoksa kopyala
+    if [ ! -f "/var/www/html/wp-content/object-cache.php" ]; then
+        cp /var/www/html/wp-content/plugins/redis-cache/includes/object-cache.php /var/www/html/wp-content/object-cache.php
+        chown nobody:nobody /var/www/html/wp-content/object-cache.php
+        echo "✅ object-cache.php drop-in eklendi"
+    fi
+fi
+
+# WP Super Cache
+if [ ! -d "/var/www/html/wp-content/plugins/wp-super-cache" ]; then
+    echo "⬇️  WP Super Cache indiriliyor..."
+    cd /tmp
+    curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-super-cache.latest-stable.zip
+    unzip -q wp-super-cache.latest-stable.zip
+    mv wp-super-cache /var/www/html/wp-content/plugins/
+    rm wp-super-cache.latest-stable.zip
+    chown -R nobody:nobody /var/www/html/wp-content/plugins/wp-super-cache
+    
+    # wp-cache-config.php oluştur
+    cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-config-sample.php /var/www/html/wp-content/wp-cache-config.php
+    sed -i "s/\$cache_enabled = false;/\$cache_enabled = true;/g" /var/www/html/wp-content/wp-cache-config.php
+    chown nobody:nobody /var/www/html/wp-content/wp-cache-config.php
+    
+    # advanced-cache.php drop-in dosyasını kopyala
+    cp /var/www/html/wp-content/plugins/wp-super-cache/advanced-cache.php /var/www/html/wp-content/advanced-cache.php
+    sed -i "s|// WP SUPER CACHE 1.2|// WP SUPER CACHE 1.2\ndefine('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/');|" /var/www/html/wp-content/advanced-cache.php
+    chown nobody:nobody /var/www/html/wp-content/advanced-cache.php
+    echo "✅ WP Super Cache kuruldu"
+else
+    echo "✅ WP Super Cache zaten mevcut"
+    # Config dosyaları yoksa oluştur
+    if [ ! -f "/var/www/html/wp-content/wp-cache-config.php" ]; then
+        cp /var/www/html/wp-content/plugins/wp-super-cache/wp-cache-config-sample.php /var/www/html/wp-content/wp-cache-config.php
+        sed -i "s/\$cache_enabled = false;/\$cache_enabled = true;/g" /var/www/html/wp-content/wp-cache-config.php
+        chown nobody:nobody /var/www/html/wp-content/wp-cache-config.php
+        echo "✅ wp-cache-config.php oluşturuldu"
+    fi
+    if [ ! -f "/var/www/html/wp-content/advanced-cache.php" ]; then
+        cp /var/www/html/wp-content/plugins/wp-super-cache/advanced-cache.php /var/www/html/wp-content/advanced-cache.php
+        sed -i "s|// WP SUPER CACHE 1.2|// WP SUPER CACHE 1.2\ndefine('WPCACHEHOME', '/var/www/html/wp-content/plugins/wp-super-cache/');|" /var/www/html/wp-content/advanced-cache.php
+        chown nobody:nobody /var/www/html/wp-content/advanced-cache.php
+        echo "✅ advanced-cache.php drop-in eklendi"
+    fi
+fi
+
+# Autoptimize
+if [ ! -d "/var/www/html/wp-content/plugins/autoptimize" ]; then
+    echo "⬇️  Autoptimize indiriliyor..."
+    cd /tmp
+    curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/autoptimize.latest-stable.zip
+    unzip -q autoptimize.latest-stable.zip
+    mv autoptimize /var/www/html/wp-content/plugins/
+    rm autoptimize.latest-stable.zip
+    chown -R nobody:nobody /var/www/html/wp-content/plugins/autoptimize
+    echo "✅ Autoptimize kuruldu"
+else
+    echo "✅ Autoptimize zaten mevcut"
+fi
+
+# Asset CleanUp
+if [ ! -d "/var/www/html/wp-content/plugins/wp-asset-clean-up" ]; then
+    echo "⬇️  Asset CleanUp indiriliyor..."
+    cd /tmp
+    curl -fLsS --retry 3 --retry-delay 2 -O https://downloads.wordpress.org/plugin/wp-asset-clean-up.latest-stable.zip
+    unzip -q wp-asset-clean-up.latest-stable.zip
+    mv wp-asset-clean-up /var/www/html/wp-content/plugins/
+    rm wp-asset-clean-up.latest-stable.zip
+    chown -R nobody:nobody /var/www/html/wp-content/plugins/wp-asset-clean-up
+    echo "✅ Asset CleanUp kuruldu"
+else
+    echo "✅ Asset CleanUp zaten mevcut"
+fi
+
+# EWWW Image Optimizer
+if [ ! -d "/var/www/html/wp-content/plugins/ewww-image-optimizer" ]; then
+    echo "⬇️  EWWW Image Optimizer indiriliyor..."
+    cd /tmp
+    curl -fLsS --retry 5 --retry-delay 3 --connect-timeout 30 --max-time 120 \
+        -O https://downloads.wordpress.org/plugin/ewww-image-optimizer.latest-stable.zip
+    unzip -q ewww-image-optimizer.latest-stable.zip
+    mv ewww-image-optimizer /var/www/html/wp-content/plugins/
+    rm ewww-image-optimizer.latest-stable.zip
+    chown -R nobody:nobody /var/www/html/wp-content/plugins/ewww-image-optimizer
+    echo "✅ EWWW Image Optimizer kuruldu"
+else
+    echo "✅ EWWW Image Optimizer zaten mevcut"
+fi
+
+cd /var/www/html
+echo "✅ Tüm eklentiler hazır"
+
 # Eklentileri aktifleştir
 echo "📦 Eklentiler aktifleştiriliyor..."
 

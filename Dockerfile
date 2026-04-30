@@ -46,7 +46,9 @@ RUN echo "opcache.enable=1" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "opcache.validate_timestamps=1" >> /etc/php82/conf.d/00_opcache.ini && \
     echo "zend.enable_gc=Off" >> /etc/php82/conf.d/custom-gc.ini && \
     echo "realpath_cache_size=4096K" >> /etc/php82/conf.d/custom-performance.ini && \
-    echo "realpath_cache_ttl=600" >> /etc/php82/conf.d/custom-performance.ini
+    echo "realpath_cache_ttl=600" >> /etc/php82/conf.d/custom-performance.ini && \
+    echo "upload_max_filesize = 64M" >> /etc/php82/conf.d/uploads.ini && \
+    echo "post_max_size = 128M" >> /etc/php82/conf.d/uploads.ini
 
 # PHP-FPM Havuzu (Elite Performance - %300 Kapasite Artışı)
 RUN rm -f /etc/php82/php-fpm.d/www.conf && \

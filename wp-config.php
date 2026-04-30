@@ -95,14 +95,14 @@ define( 'AUTOSAVE_INTERVAL', 300 ); // 5 dakika (varsayılan 60 saniye)
 // WP-Cron Devre Dışı (Sistem Cron Kullanılacak)
 define( 'DISABLE_WP_CRON', true );
 
-// Concatenate Scripts (Admin panelinde script birleştirme)
-define( 'CONCATENATE_SCRIPTS', true );
+// Concatenate Scripts (Admin panelinde ve bazı temalarda sorun yaratabilir)
+define( 'CONCATENATE_SCRIPTS', false );
 
 // Compress CSS
-define( 'COMPRESS_CSS', true );
+define( 'COMPRESS_CSS', false );
 
 // Compress Scripts
-define( 'COMPRESS_SCRIPTS', true );
+define( 'COMPRESS_SCRIPTS', false );
 
 // Enforce SSL (Eğer HTTPS kullanıyorsanız)
 // define( 'FORCE_SSL_ADMIN', true );

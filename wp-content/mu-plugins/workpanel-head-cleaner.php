@@ -20,10 +20,10 @@ add_action('init', function() {
     remove_action('wp_head', 'wp_shortlink_wp_head', 10, 0);
     remove_action('wp_head', 'adjacent_posts_rel_link_wp_head', 10, 0);
     
-    // REST API ve oEmbed çöplerini kaldır (Sadece API kullanan mobil uygulamanız yoksa önerilir)
-    remove_action('wp_head', 'rest_output_link_wp_head', 10);
-    remove_action('wp_head', 'wp_oembed_add_discovery_links', 10);
-    remove_action('template_redirect', 'rest_output_link_header', 11, 0);
+    // REST API ve oEmbed çöplerini kaldır (Gutenberg için REST API linkleri gereklidir!)
+    // remove_action('wp_head', 'rest_output_link_wp_head', 10);
+    // remove_action('wp_head', 'wp_oembed_add_discovery_links', 10);
+    // remove_action('template_redirect', 'rest_output_link_header', 11, 0);
     
     // Emojileri temizle (Sadece modern tarayıcıların yerleşik emojileri kullanılacak)
     remove_action('wp_head', 'print_emoji_detection_script', 7);

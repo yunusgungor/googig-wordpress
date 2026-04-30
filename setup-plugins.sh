@@ -176,21 +176,24 @@ wp plugin activate ewww-image-optimizer --allow-root 2>/dev/null && echo "✅ EW
 echo "🔧 Redis Object Cache yapılandırılıyor..."
 wp redis enable --allow-root 2>/dev/null && echo "✅ Redis Object Cache etkinleştirildi"
 
-# Autoptimize Optimal Ayarları
+# Autoptimize Uyumlu Ayarlar
 echo "🔧 Autoptimize yapılandırılıyor..."
 wp option update autoptimize_js_aggregate 'on' --allow-root
 wp option update autoptimize_js_defer 'on' --allow-root
-wp option update autoptimize_js_exclude 'wp-includes/js/dist/, wp-includes/js/tinymce/, js/jquery/jquery.min.js' --allow-root
+# Gutenberg ve Blocksy JS istisnaları
+wp option update autoptimize_js_exclude 'wp-includes/js/dist/, wp-includes/js/tinymce/, js/jquery/jquery.min.js, blocksy' --allow-root
 wp option update autoptimize_css_aggregate 'on' --allow-root
-wp option update autoptimize_css_inline 'on' --allow-root
-wp option update autoptimize_css_defer 'on' --allow-root
-wp option update autoptimize_css_defer_inline 'on' --allow-root
+# CSS Deferring kapatıldı (Gutenberg/FSE kırılmalarını önlemek için)
+wp option update autoptimize_css_defer 'off' --allow-root
+wp option update autoptimize_css_defer_inline 'off' --allow-root
+# Satır içi CSS'i birleştirme (Blocksy değişkenleri için kritik)
+wp option update autoptimize_css_inline 'off' --allow-root
+# Gutenberg ve Blocksy CSS istisnaları
+wp option update autoptimize_css_exclude 'wp-includes/css/dist/, blocksy, elementor' --allow-root
 wp option update autoptimize_html 'on' --allow-root
 wp option update autoptimize_html_keepcomments 'off' --allow-root
 wp option update autoptimize_optimize_logged 'off' --allow-root
-wp option update autoptimize_optimize_checkout 'off' --allow-root
-wp option update autoptimize_optimize_cart 'off' --allow-root
-echo "✅ Autoptimize optimal ayarlar uygulandı"
+echo "✅ Autoptimize uyumlu ayarlar uygulandı"
 
 # Asset CleanUp Optimal Ayarları
 echo "🔧 Asset CleanUp yapılandırılıyor..."

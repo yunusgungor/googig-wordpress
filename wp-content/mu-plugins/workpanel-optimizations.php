@@ -299,8 +299,18 @@ function workpanel_defer_scripts($tag, $handle, $src) {
         return $tag;
     }
     
-    // jQuery'yi defer etme (bağımlılık sorunları olabilir)
-    if ('jquery' === $handle || 'jquery-core' === $handle || 'jquery-migrate' === $handle) {
+    // Kritik scriptleri defer etme (bağımlılık sorunları için)
+    $exclude_handles = [
+        'jquery',
+        'jquery-core',
+        'jquery-migrate',
+        'blocksy',
+        'blocksy-companion',
+        'stackable',
+        'otter'
+    ];
+    
+    if (in_array($handle, $exclude_handles)) {
         return $tag;
     }
     

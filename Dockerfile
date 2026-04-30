@@ -68,7 +68,8 @@ RUN rm -f /etc/php82/php-fpm.d/www.conf && \
         echo 'clear_env = no'; \
         echo 'catch_workers_output = yes'; \
         echo 'php_admin_value[error_log] = /dev/stderr'; \
-        echo 'php_admin_flag[log_errors] = on'; \
+        echo 'php_admin_value[syslog.file_prefix] = ""'; \
+        echo 'php_flag[log_errors] = on'; \
         echo 'request_terminate_timeout = 30s'; \
         echo 'rlimit_files = 4096'; \
         echo 'rlimit_core = 0'; \
